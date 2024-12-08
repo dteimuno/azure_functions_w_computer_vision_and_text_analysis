@@ -1,0 +1,11 @@
+{
+    "IsEncrypted": false,
+    "Values": {
+        "AzureWebJobsStorage": "<your-storage-connection-string>",
+        "FUNCTIONS_WORKER_RUNTIME": "python",
+        "COMPUTER_VISION_ENDPOINT": "<your-computer-vision-endpoint>",
+        "COMPUTER_VISION_KEY": "<your-computer-vision-key>",
+        "LANGUAGE_SERVICE_ENDPOINT": "<your-language-service-endpoint>",
+        "LANGUAGE_SERVICE_KEY": "<your-language-service-key>"
+    }
+}
