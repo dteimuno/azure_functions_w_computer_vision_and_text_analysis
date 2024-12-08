@@ -1,0 +1,4 @@
+azure-storage-blob==<version>
+azure-ai-vision==<version>
+azure-ai-language-textanalytics==<version>
+pillow==<version>
