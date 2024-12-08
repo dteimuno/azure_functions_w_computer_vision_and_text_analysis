@@ -1,0 +1,60 @@
+import logging
+import os
+import azure.functions as func
+from azure.storage.blob import BlobClient
+from azure.ai.vision import VisionClient
+from azure.ai.language.textanalytics import TextAnalyticsClient
+from azure.core.credentials import AzureKeyCredential
+from PIL import Image
+import io
+
+# Set your Azure service keys and endpoints
+COMPUTER_VISION_ENDPOINT = os.getenv("COMPUTER_VISION_ENDPOINT")
+COMPUTER_VISION_KEY = os.getenv("COMPUTER_VISION_KEY")
+LANGUAGE_SERVICE_ENDPOINT = os.getenv("LANGUAGE_SERVICE_ENDPOINT")
+LANGUAGE_SERVICE_KEY = os.getenv("LANGUAGE_SERVICE_KEY")
+
+def main(blob: func.InputStream):
+    logging.info(f"Processing blob: {blob.name}, Size: {blob.length} bytes")
+
+    # Determine the file type
+    content_type = blob.properties.content_settings.content_type
+
+    if "image" in content_type:
+        logging.info("Processing image with Azure Computer Vision")
+        process_image(blob)
+    elif "text" in content_type or "application/pdf" in content_type:
+        logging.info("Processing document with Azure Language Studio")
+        process_document(blob)
+    else:
+        logging.warning("Unsupported file type. Skipping.")
+
+def process_image(blob):
+    # Initialize Vision client
+    vision_client = VisionClient(endpoint=COMPUTER_VISION_ENDPOINT, credential=AzureKeyCredential(COMPUTER_VISION_KEY))
+
+    # Read blob content as bytes
+    image_bytes = blob.read()
+    image_stream = io.BytesIO(image_bytes)
+
+    try:
+        # Analyze the image
+        analysis = vision_client.analyze_image_in_stream(image_stream)
+        logging.info(f"Image analysis result: {analysis.description}")
+    except Exception as e:
+        logging.error(f"Error analyzing image: {str(e)}")
+
+def process_document(blob):
+    # Initialize Language client
+    language_client = TextAnalyticsClient(endpoint=LANGUAGE_SERVICE_ENDPOINT, credential=AzureKeyCredential(LANGUAGE_SERVICE_KEY))
+
+    # Read blob content as text
+    document_content = blob.read().decode("utf-8")
+
+    try:
+        # Analyze document content
+        response = language_client.analyze_sentiment([document_content])
+        sentiment = response[0]
+        logging.info(f"Document sentiment: {sentiment.sentiment}")
+    except Exception as e:
+        logging.error(f"Error analyzing document: {str(e)}")
